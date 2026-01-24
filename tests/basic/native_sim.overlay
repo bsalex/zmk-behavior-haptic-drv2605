@@ -1,18 +1,14 @@
-/ {
-	i2c_mock: i2c-mock {
-		compatible = "zmk,i2c-mock";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		status = "okay";
+&i2c0 {
+	status = "okay";
 
-		drv2605_0: drv2605@5a {
-			compatible = "ti,drv2605";
-			reg = <0x5a>;
-			vib-rated-mv = <3200>;
-			vib-overdrive-mv = <3200>;
-			actuator-mode = "LRA";
-		};
+	drv2605_0: drv2605@5a {
+		compatible = "ti,drv2605";
+		reg = <0x5a>;
+		vib-rated-mv = <3200>;
+		vib-overdrive-mv = <3200>;
+		actuator-mode = "LRA";
 	};
-
-
 };
+
+
+

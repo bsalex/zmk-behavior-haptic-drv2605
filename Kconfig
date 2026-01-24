@@ -1,12 +1,9 @@
 menu "Haptic DRV2605 Options"
 
 config ZMK_BEHAVIOR_HAPTIC_DRV2605
-	bool "enabled"
+    bool "Haptic DRV2605 Behavior"
 	default n
 
-config ZMK_I2C_MOCK
-    bool "I2C Mock Driver"
-    default n
 
 endmenu
 
