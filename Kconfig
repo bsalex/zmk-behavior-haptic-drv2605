@@ -4,6 +4,10 @@ config ZMK_BEHAVIOR_HAPTIC_DRV2605
 	bool "enabled"
 	default n
 
+config ZMK_I2C_MOCK
+    bool "I2C Mock Driver"
+    default n
+
 endmenu
 
 module = ZMK_BEHAVIOR_HAPTIC_DRV2605

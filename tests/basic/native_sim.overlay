@@ -1,11 +1,8 @@
 / {
-	i2c_gpio: i2c-gpio {
-		compatible = "gpio-i2c";
-		sda-gpios = <&gpio0 0 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
-		scl-gpios = <&gpio0 1 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+	i2c_mock: i2c-mock {
+		compatible = "zmk,i2c-mock";
 		#address-cells = <1>;
 		#size-cells = <0>;
-        clock-frequency = <100000>;
 		status = "okay";
 
 		drv2605_0: drv2605@5a {
@@ -16,4 +13,6 @@
 			actuator-mode = "LRA";
 		};
 	};
+
+
 };

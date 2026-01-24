@@ -87,6 +87,6 @@ static int behavior_haptic_init(const struct device *dev) {
     };                                                                                             \
     BEHAVIOR_DT_INST_DEFINE(inst, behavior_haptic_init, NULL, NULL,                                \
                             &behavior_haptic_config_##inst, POST_KERNEL,                           \
-                            CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &behavior_haptic_driver_api);
+                            CONFIG_APPLICATION_INIT_PRIORITY, &behavior_haptic_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(BEHAVIOR_HAPTIC_DRV2605_DEFINE)
