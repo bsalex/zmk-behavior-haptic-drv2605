@@ -1,3 +1,3 @@
 zmk_behavior_haptic_drv2605: behavior_haptic_init: Haptic device ready
+zmk: behavior_queue_process_next: Invoking haptic_drv2605: 0x01 0x00
 zmk_behavior_haptic_drv2605: on_keymap_binding_pressed: Played effect 1
-zmk_behavior_haptic_drv2605: on_keymap_binding_pressed: Played effect 2

@@ -15,12 +15,22 @@
         haptic-device = <&drv2605_0>;
     };
 
+    macros {
+        haptic_in_macro: haptic_in_macro {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings
+                = <&haptic_drv2605 1 &haptic_drv2605 2>
+                ;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
         default_layer {
             bindings = <
                 &haptic_drv2605 1 &haptic_drv2605 2
-                &haptic_drv2605 3 &haptic_drv2605 4
+                &haptic_in_macro &haptic_drv2605 4
             >;
         };
     };

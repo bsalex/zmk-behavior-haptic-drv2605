@@ -74,9 +74,10 @@ static const struct behavior_driver_api behavior_haptic_driver_api = {
 static int behavior_haptic_init(const struct device *dev) {
     const struct behavior_haptic_config *cfg = dev->config;
 
-    if (!device_is_ready(cfg->haptic_dev)) {
-        LOG_ERR("Haptic device not found or not ready");
-        return -ENODEV;
+    if (device_is_ready(cfg->haptic_dev)) {
+        LOG_DBG("Haptic device ready");
+    } else {
+        LOG_WRN("Haptic device not ready during init");
     }
     return 0;
 }
@@ -87,6 +88,6 @@ static int behavior_haptic_init(const struct device *dev) {
     };                                                                                             \
     BEHAVIOR_DT_INST_DEFINE(inst, behavior_haptic_init, NULL, NULL,                                \
                             &behavior_haptic_config_##inst, POST_KERNEL,                           \
-                            CONFIG_APPLICATION_INIT_PRIORITY, &behavior_haptic_driver_api);
+                            CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &behavior_haptic_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(BEHAVIOR_HAPTIC_DRV2605_DEFINE)
