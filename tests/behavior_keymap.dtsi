@@ -1,0 +1,27 @@
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+/ {
+
+    kscan: native_posix_64_kscan_mock {
+		compatible = "zmk,kscan-mock";
+		label = "KSCAN_MOCK";
+
+		exit-after;
+	};
+
+    haptic_drv2605: haptic_drv2605 {
+        compatible = "zmk,behavior-haptic-drv2605";
+        #binding-cells = <1>;
+        haptic-device = <&drv2605_0>;
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+        default_layer {
+            bindings = <
+                &haptic_drv2605 1 &haptic_drv2605 2
+                &haptic_drv2605 3 &haptic_drv2605 4
+            >;
+        };
+    };
+};

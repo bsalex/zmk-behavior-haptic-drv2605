@@ -1,0 +1,19 @@
+/ {
+	i2c_gpio: i2c-gpio {
+		compatible = "gpio-i2c";
+		sda-gpios = <&gpio0 0 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&gpio0 1 (GPIO_ACTIVE_HIGH | GPIO_OPEN_DRAIN)>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+        clock-frequency = <100000>;
+		status = "okay";
+
+		drv2605_0: drv2605@5a {
+			compatible = "ti,drv2605";
+			reg = <0x5a>;
+			vib-rated-mv = <3200>;
+			vib-overdrive-mv = <3200>;
+			actuator-mode = "LRA";
+		};
+	};
+};

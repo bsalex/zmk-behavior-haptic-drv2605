@@ -1,0 +1,22 @@
+/*
+ * Basic Haptic DRV2605 Test
+ *
+ * This test verifies the fundamental functionality of haptic feedback using binding->param1 as the effect id.
+ *
+ * Sequence:
+ * 1. Press & Release Key 0 (Position 0,0) - Should trigger haptic feedback with effect id 1
+ * 2. Press & Release Key 1 (Position 0,1) - Should trigger haptic feedback with effect id 2
+ */
+#include <dt-bindings/zmk/keys.h>
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/kscan_mock.h>
+#include "../behavior_keymap.dtsi"
+
+&kscan {
+    events = <
+        ZMK_MOCK_PRESS(0,0,10)
+        ZMK_MOCK_RELEASE(0,0,10)
+        ZMK_MOCK_PRESS(0,1,10)
+        ZMK_MOCK_RELEASE(0,1,10)
+    >;
+};

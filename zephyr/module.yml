@@ -1,0 +1,6 @@
+name: zmk-behavior-haptic-drv2605
+build:
+  cmake: .
+  kconfig: Kconfig
+  settings:
+    dts_root: .

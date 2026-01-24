@@ -1,0 +1,11 @@
+description: Haptic feedback behavior using DRV2605
+
+compatible: "zmk,behavior-haptic-drv2605"
+
+include: one_param.yaml
+
+properties:
+    haptic-device:
+        type: phandle
+        required: true
+        description: The DRV2605 haptic device to control

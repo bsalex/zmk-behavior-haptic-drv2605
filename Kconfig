@@ -1,0 +1,11 @@
+menu "Haptic DRV2605 Options"
+
+config ZMK_BEHAVIOR_HAPTIC_DRV2605
+	bool "enabled"
+	default n
+
+endmenu
+
+module = ZMK_BEHAVIOR_HAPTIC_DRV2605
+module-str = zmk_behavior_haptic_drv2605
+source "subsys/logging/Kconfig.template.log_config"
