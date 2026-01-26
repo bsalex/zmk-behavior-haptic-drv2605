@@ -1,3 +1,6 @@
-zmk_behavior_haptic_drv2605: behavior_haptic_init: Haptic device ready
+zmk_behavior_haptic_drv2605: Haptic device (Index 0) not ready during init
+zmk_behavior_haptic_drv2605: calibrate_inst: Late Calibration: Haptic device ready (Index 0)
+zmk_behavior_haptic_drv2605: behavior_haptic_auto_cal: Starting Auto-Calibration (Bypassing Driver)
+zmk_behavior_haptic_drv2605: behavior_haptic_auto_cal: Auto-Calibration Success
 zmk_behavior_haptic_drv2605: on_keymap_binding_pressed: Played effect 1
 zmk_behavior_haptic_drv2605: on_keymap_binding_pressed: Played effect 2

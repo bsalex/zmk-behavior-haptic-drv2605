@@ -7,5 +7,10 @@ include: one_param.yaml
 properties:
     haptic-device:
         type: phandle
-        required: true
-        description: The DRV2605 haptic device to control
+        required: false
+        description: "The DRV2605 haptic device to control (Deprecated: Auto-discovered)"
+    
+    driver-index:
+        type: int
+        default: 0
+        description: "Index of the DRV2605 instance to use (0 = first found, 1 = second...)"

@@ -12,7 +12,6 @@
     haptic_drv2605: haptic_drv2605 {
         compatible = "zmk,behavior-haptic-drv2605";
         #binding-cells = <1>;
-        haptic-device = <&drv2605_0>;
     };
 
     macros {
