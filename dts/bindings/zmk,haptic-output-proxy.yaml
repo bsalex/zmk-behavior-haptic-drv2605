@@ -8,7 +8,3 @@ compatible: "zmk,haptic-output-proxy"
 
 
 
-properties:
-  output-device:
-    type: phandle
-    required: false
