@@ -24,36 +24,46 @@
 #define DRV2605_GO_BIT 0x01
 #define DRV2605_DIAG_RESULT 0x08
 
+#if IS_ENABLED(CONFIG_ZMK_SPLT_PERIPHERAL_OUTPUT_RELAY) && IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+#include <zmk/split/output-relay/event.h>
+extern int zmk_split_bt_invoke_output(const struct device *dev,
+                                      struct zmk_split_bt_output_relay_event event);
+#endif
+
 LOG_MODULE_REGISTER(zmk_behavior_haptic_drv2605, CONFIG_ZMK_BEHAVIOR_HAPTIC_DRV2605_LOG_LEVEL);
 
-struct behavior_haptic_data {
-    const struct device *haptic_dev;
-};
-
 struct behavior_haptic_config {
-    int driver_index;
+    const struct device *haptic_dev;
+    const struct i2c_dt_spec *i2c; /* Optional, for auto-cal if supported */
+    bool is_proxy;
 };
 
-struct haptic_drv_info {
-    const struct device *dev;
-    struct i2c_dt_spec i2c;
+struct behavior_haptic_data {
+    /* Data if needed */
 };
-
-#define EXTRACT_INFO(node_id) {.dev = DEVICE_DT_GET(node_id), .i2c = I2C_DT_SPEC_GET(node_id)},
-
-/* Capture all drv2605 instances found in DTS */
-static const struct haptic_drv_info haptics_available[] = {
-    DT_FOREACH_STATUS_OKAY(ti_drv2605, EXTRACT_INFO)};
 
 static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
                                      struct zmk_behavior_binding_event event) {
     const struct device *dev = device_get_binding(binding->behavior_dev);
-    struct behavior_haptic_data *data = (struct behavior_haptic_data *)dev->data;
+    const struct behavior_haptic_config *config = dev->config;
     uint8_t effect_id = binding->param1;
 
-    if (!data->haptic_dev || !device_is_ready(data->haptic_dev)) {
+    if (!config->haptic_dev || !device_is_ready(config->haptic_dev)) {
         LOG_WRN("Haptic device not ready");
         return ZMK_BEHAVIOR_OPAQUE;
+    }
+
+    if (config->is_proxy) {
+#if IS_ENABLED(CONFIG_ZMK_SPLT_PERIPHERAL_OUTPUT_RELAY) && IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+        struct zmk_split_bt_output_relay_event ev = {
+            .value = effect_id,
+        };
+        LOG_DBG("Forwarding effect %d over BLE proxy", effect_id);
+        return zmk_split_bt_invoke_output(config->haptic_dev, ev);
+#else
+        LOG_WRN("Proxy configured but split relay not enabled or not central");
+        return ZMK_BEHAVIOR_OPAQUE;
+#endif
     }
 
     struct drv2605_rom_data rom_data = {
@@ -70,18 +80,18 @@ static int on_keymap_binding_pressed(struct zmk_behavior_binding *binding,
         .rom_data = &rom_data,
     };
 
-    int ret = drv2605_haptic_config(data->haptic_dev, DRV2605_HAPTICS_SOURCE_ROM, &config_data);
+    int ret = drv2605_haptic_config(config->haptic_dev, DRV2605_HAPTICS_SOURCE_ROM, &config_data);
     if (ret < 0) {
         LOG_ERR("Failed to configure haptic device: %d", ret);
         return ZMK_BEHAVIOR_OPAQUE;
     }
 
-    ret = haptics_start_output(data->haptic_dev);
+    ret = haptics_start_output(config->haptic_dev);
     if (ret < 0) {
         LOG_ERR("Failed to start haptic output: %d", ret);
     }
 
-    LOG_DBG("Played effect %d", effect_id);
+    LOG_DBG("Played effect %d natively", effect_id);
 
     return ZMK_BEHAVIOR_OPAQUE;
 }
@@ -145,76 +155,61 @@ static int behavior_haptic_auto_cal(const struct i2c_dt_spec *i2c) {
         LOG_DBG("Auto-Calibration Success");
     }
 
-    /* Driver (at prio 35) or system expects Internal Trigger mode?
-       The driver init sets it to Internal Trigger. We probably overwrote it.
-       Restore it. */
+    /* Restore Internal Trigger mode */
     return i2c_reg_update_byte_dt(i2c, DRV2605_REG_MODE, 0x07, 0x00); /* 0x00 = Internal Trigger */
 }
 
 static int behavior_haptic_init(const struct device *dev) {
-    struct behavior_haptic_data *data = (struct behavior_haptic_data *)dev->data;
-    const struct behavior_haptic_config *cfg = dev->config;
+    const struct behavior_haptic_config *config = dev->config;
 
-    if (ARRAY_SIZE(haptics_available) == 0) {
-        LOG_WRN("No DRV2605 devices found in DTS");
-        return 0;
-    }
-
-    /* Use the configured driver index */
-    int idx = cfg->driver_index;
-    if (idx < 0 || idx >= ARRAY_SIZE(haptics_available)) {
-        LOG_ERR("Driver index %d out of range (found %zu devices)", idx,
-                ARRAY_SIZE(haptics_available));
+    if (!config->haptic_dev) {
+        LOG_ERR("No haptic device configured");
         return -ENODEV;
     }
 
-    const struct haptic_drv_info *info = &haptics_available[idx];
-    data->haptic_dev = info->dev;
-
-    if (device_is_ready(data->haptic_dev)) {
-        LOG_DBG("Haptic device ready (Index %d)", idx);
+    if (device_is_ready(config->haptic_dev)) {
+        LOG_DBG("Haptic device ready");
     } else {
-        LOG_WRN("Haptic device (Index %d) not ready during init", idx);
+        LOG_WRN("Haptic device not ready during init");
     }
     return 0;
 }
 
+#define GET_HAPTIC_DEV(inst) DEVICE_DT_GET(DT_INST_PHANDLE(inst, haptic_device))
+
+#define GET_I2C_SPEC_PTR(inst)                                                                     \
+    COND_CODE_1(                                                                                   \
+        DT_NODE_HAS_COMPAT(DT_INST_PHANDLE(inst, haptic_device), ti_drv2605),                      \
+        (&(const struct i2c_dt_spec)I2C_DT_SPEC_GET(DT_INST_PHANDLE(inst, haptic_device))),        \
+        (NULL))
+
 #define BEHAVIOR_HAPTIC_DRV2605_DEFINE(inst)                                                       \
-    static struct behavior_haptic_data behavior_haptic_data_##inst = {                             \
-        .haptic_dev = NULL,                                                                        \
+    static const struct behavior_haptic_config behavior_haptic_config_##inst = {                   \
+        .haptic_dev = GET_HAPTIC_DEV(inst),                                                        \
+        .i2c = GET_I2C_SPEC_PTR(inst),                                                             \
+        .is_proxy = DT_NODE_HAS_COMPAT(DT_INST_PHANDLE(inst, haptic_device), zmk_haptic_output_proxy), \
     };                                                                                             \
-    static struct behavior_haptic_config behavior_haptic_config_##inst = {                         \
-        .driver_index = DT_INST_PROP_OR(inst, driver_index, 0),                                    \
-    };                                                                                             \
+    static struct behavior_haptic_data behavior_haptic_data_##inst;                                \
     BEHAVIOR_DT_INST_DEFINE(inst, behavior_haptic_init, NULL, &behavior_haptic_data_##inst,        \
                             &behavior_haptic_config_##inst, POST_KERNEL,                           \
-                            CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &behavior_haptic_driver_api);
+                            39, &behavior_haptic_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(BEHAVIOR_HAPTIC_DRV2605_DEFINE)
 
 static void calibrate_inst(const struct device *dev) {
     const struct behavior_haptic_config *cfg = dev->config;
-    struct behavior_haptic_data *data = (struct behavior_haptic_data *)dev->data;
 
-    /* Re-check/acquire device if init failed to get it?
-       Actually init does selection. Data->haptic_dev should be set. */
-
-    if (data->haptic_dev && device_is_ready(data->haptic_dev)) {
-        LOG_DBG("Late Calibration: Haptic device ready (Index %d)", cfg->driver_index);
-
-        /* We need the i2c spec. It's in haptics_available using index */
-        int idx = cfg->driver_index;
-        if (idx >= 0 && idx < ARRAY_SIZE(haptics_available)) {
-            behavior_haptic_auto_cal(&haptics_available[idx].i2c);
-        }
+    if (cfg->i2c && cfg->haptic_dev && device_is_ready(cfg->haptic_dev)) {
+        LOG_DBG("Late Calibration: Haptic device ready");
+        behavior_haptic_auto_cal(cfg->i2c);
     }
 }
 
 static int behavior_haptic_late_init(void) {
-/* Iterate all behavior instances and run calibration */
+    /* Iterate all behavior instances and run calibration */
 #define CALIBRATE_INST(inst) calibrate_inst(DEVICE_DT_INST_GET(inst));
     DT_INST_FOREACH_STATUS_OKAY(CALIBRATE_INST)
     return 0;
 }
 
-SYS_INIT(behavior_haptic_late_init, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+SYS_INIT(behavior_haptic_late_init, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);

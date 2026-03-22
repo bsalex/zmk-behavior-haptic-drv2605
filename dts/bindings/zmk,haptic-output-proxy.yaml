@@ -1,0 +1,14 @@
+# Copyright (c) 2024 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: |
+  Haptic driver that proxies commands to a generic output device
+
+compatible: "zmk,haptic-output-proxy"
+
+
+
+properties:
+  output-device:
+    type: phandle
+    required: false

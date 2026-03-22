@@ -1,0 +1,15 @@
+# Copyright (c) 2024 The ZMK Contributors
+# SPDX-License-Identifier: MIT
+
+description: |
+  Value-to-haptic-feedback output device
+
+compatible: "zmk,output-haptic"
+
+properties:
+  device:
+    type: phandle
+    required: true
+  driver:
+    type: string
+    required: false
